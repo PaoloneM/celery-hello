@@ -1,4 +1,5 @@
 from tasks import add
+from celery import group
 import logging
 
 logging.basicConfig(
@@ -8,14 +9,10 @@ logging.basicConfig(
 
 logging.info("Start")
 
-result = add.delay(4,4)
+n = 1000;
 
-state = ""
-while state != "SUCCESS":
-	nextState = result.status
-	if (state != nextState):
-		state = nextState
-		logging.info(state)
 
-logging.info("End %s" % result.get())
-result.forget()
+g = group(add.s(i) for i in range(n))
+result = g(1).get()
+
+logging.info("End %s" % len(result))
